@@ -1,31 +1,47 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
+import type { PortfolioScenario } from "@/api";
 import {
   CurrencyToggle,
+  ErrorState,
   Header,
+  MockApiControls,
   Navbar,
   PortfolioSummaryCard,
-  ScenarioSwitcher,
+  SLOW_REQUEST_DELAY_MS,
+  SummarySkeleton,
 } from "@/components";
-import { useCurrency } from "@/composables";
-import { DEFAULT_SUMMARY_SCENARIO, SUMMARY_SCENARIOS } from "@/mocks";
+import type { RequestMode } from "@/components";
+import { useCurrency, useExchangeRate, usePortfolio } from "@/composables";
+
+// Load the first account until the account selector arrives in milestone 8.
+const DEFAULT_ACCOUNT_ID = "P-9001";
 
 // Render the portfolio overview page.
 export default function Home() {
+  // Hold the mock API controls.
+  const [scenario, setScenario] = useState<PortfolioScenario>("default");
+  const [requestMode, setRequestMode] = useState<RequestMode>("normal");
+
+  // Load the portfolio for the selected dataset.
+  const portfolio = usePortfolio({
+    accountId: DEFAULT_ACCOUNT_ID,
+    scenario,
+    delayMs: requestMode === "slow" ? SLOW_REQUEST_DELAY_MS : undefined,
+    fail: requestMode === "fail",
+  });
+
+  // Load the exchange rate. Fall back to the built in rate until it arrives.
+  const exchangeRate = useExchangeRate();
+
   // Hold the display currency.
-  const { currency, setCurrency, convertAmount } = useCurrency("CAD");
-
-  // Hold the active mock dataset.
-  const [scenarioId, setScenarioId] = useState<string>(DEFAULT_SUMMARY_SCENARIO.id);
-
-  // Resolve the summary for the active dataset.
-  const summary = useMemo(
-    () =>
-      SUMMARY_SCENARIOS.find((scenario) => scenario.id === scenarioId)?.summary ??
-      DEFAULT_SUMMARY_SCENARIO.summary,
-    [scenarioId]
+  const { currency, setCurrency, convertAmount } = useCurrency(
+    "CAD",
+    exchangeRate.data?.CADtoUSD
   );
+
+  const summary = portfolio.data?.portfolio ?? null;
 
   return (
     <div className="min-h-screen">
@@ -38,24 +54,41 @@ export default function Home() {
       {/* Main content column */}
       <div className="px-6 pb-16 lg:px-[60px]">
         <Header
-          eyebrow="Portfolio"
+          eyebrow={summary?.label ?? "Portfolio"}
           title="Overview"
           actions={
-            <ScenarioSwitcher
-              scenarios={SUMMARY_SCENARIOS}
-              activeId={scenarioId}
-              onSelect={setScenarioId}
+            <MockApiControls
+              scenario={scenario}
+              onScenarioChange={setScenario}
+              requestMode={requestMode}
+              onRequestModeChange={setRequestMode}
             />
           }
         />
 
         <main className="flex flex-col gap-6">
-          {/* Summary region */}
-          <PortfolioSummaryCard
-            summary={summary}
-            currency={currency}
-            convertAmount={convertAmount}
-          />
+          {/* Summary region, with its loading and error states */}
+          {portfolio.status === "loading" ? (
+            <SummarySkeleton />
+          ) : portfolio.error ? (
+            <ErrorState error={portfolio.error} onRetry={portfolio.refetch} />
+          ) : (
+            <PortfolioSummaryCard
+              summary={summary}
+              currency={currency}
+              convertAmount={convertAmount}
+            />
+          )}
+
+          {/* Provenance line, so it is clear the figures come from the mock API */}
+          {portfolio.data ? (
+            <p className="eyebrow text-subtle">
+              Mock API &middot; as of{" "}
+              <time dateTime={portfolio.data.asOf}>
+                {new Date(portfolio.data.asOf).toLocaleTimeString()}
+              </time>
+            </p>
+          ) : null}
 
           {/* Placeholder region for the next milestones */}
           <section className="flex min-h-56 flex-col items-center justify-center rounded-card border border-dashed border-line p-10 text-center">
