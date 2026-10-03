@@ -1,3 +1,4 @@
+// Summary: FolioMind AI assistant panel analysing chart selections and answering follow-up questions.
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -5,13 +6,13 @@ import type { FormEvent } from "react";
 import { describeApiError } from "@/api";
 import type { ApiError } from "@/api";
 import type { AsyncStatus, ChatMessage } from "@/types";
-import { Button, Card } from "./ui";
+import { Button, Card, ElectricMindSymbol } from "./ui";
 
 // List the steps shown before the first question.
 const STEPS: readonly string[] = [
   "Click a start point on the portfolio value line.",
   "Click an end point. The period is shaded and summarised.",
-  "Press Ask Portfolio AI. The dates, values, change and your holdings are sent as context.",
+  "Press Ask FolioMind. The dates, values, change and your holdings are sent as context.",
 ];
 
 // Define properties for the panel.

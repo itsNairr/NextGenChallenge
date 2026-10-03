@@ -20,6 +20,7 @@ import {
   buildSelectionSummary,
   findRuns,
   formatFullDate,
+  toAllocationContext,
   toHoldingContext,
   useChartSelection,
   useCurrency,
@@ -79,11 +80,21 @@ export default function Home() {
     ? `${formatFullDate(selectionSummary.startDate)} to ${formatFullDate(selectionSummary.endDate)}`
     : "";
 
-  const holdingContext = useMemo(() => toHoldingContext(holdings), [holdings]);
+  // Convert the holdings and asset classes once, so the AI context uses one currency.
+  const holdingContext = useMemo(
+    () => toHoldingContext(holdings, convertAmount),
+    [holdings, convertAmount]
+  );
+  const allocationContext = useMemo(
+    () => toAllocationContext(allocation, convertAmount),
+    [allocation, convertAmount]
+  );
 
   const ai = usePortfolioAi({
     selection: selectionSummary,
     holdings: holdingContext,
+    allocation: allocationContext,
+    totalHoldings: holdings.length,
     selectionLabel,
   });
 
@@ -92,10 +103,7 @@ export default function Home() {
   return (
     <div className="min-h-screen">
       {/* Persistent top navigation */}
-      <Navbar
-        activeId="overview"
-        actions={<CurrencyToggle currency={currency} onSelect={setCurrency} />}
-      />
+      <Navbar actions={<CurrencyToggle currency={currency} onSelect={setCurrency} />} />
 
       {/* Main content column */}
       <div className="px-6 pb-16 lg:px-[60px]">
@@ -175,15 +183,6 @@ export default function Home() {
               </time>
             </p>
           ) : null}
-
-          {/* Placeholder region for the next milestones */}
-          <section className="flex min-h-40 flex-col items-center justify-center rounded-card border border-dashed border-line p-10 text-center">
-            <p className="eyebrow text-subtle">Next milestones</p>
-            <p className="mt-3 max-w-md text-sm text-body">
-              The date range selector, the account selector, and the holding detail view arrive in
-              later milestones.
-            </p>
-          </section>
         </main>
       </div>
     </div>

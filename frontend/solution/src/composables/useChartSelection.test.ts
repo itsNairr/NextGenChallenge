@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   buildSelectionSummary,
   reduceSelection,
+  toAllocationContext,
   toHoldingContext,
 } from "@/composables/useChartSelection";
 import type { ChartSeriesPoint, Holding } from "@/types";
@@ -101,36 +102,134 @@ describe("buildSelectionSummary", () => {
 });
 
 describe("toHoldingContext", () => {
-  test("sends identity and weight, but no money amounts", () => {
-    const holdings: Holding[] = [
-      {
-        ticker: "AAPL",
-        name: "Apple Inc.",
-        assetClass: "Equity",
-        sector: "Technology",
-        quantity: 120,
-        price: 227.5,
-        costBasisPerShare: 200,
-        marketValue: 27300,
-        gainLoss: 3300,
-        dayChangeAmount: 100,
-        dayChangePercent: 2.4,
-        weightPercent: 41.6,
-      },
-    ];
-    const context = toHoldingContext(holdings);
-    assert.deepEqual(context, [
-      {
-        ticker: "AAPL",
-        name: "Apple Inc.",
-        assetClass: "Equity",
-        weightPercent: 41.6,
-        dayChangePercent: 2.4,
-      },
-    ]);
-    const keys = Object.keys(context[0]);
-    for (const money of ["marketValue", "gainLoss", "price", "costBasisPerShare", "quantity"]) {
-      assert.ok(!keys.includes(money), `${money} is not sent`);
-    }
+  const holdings: Holding[] = [
+    {
+      ticker: "BND",
+      name: "Vanguard Total Bond ETF",
+      assetClass: "Fixed Income",
+      sector: "Bonds",
+      quantity: 300,
+      price: 72.1,
+      costBasisPerShare: 74,
+      marketValue: 21630,
+      gainLoss: -570,
+      dayChangeAmount: -12,
+      dayChangePercent: -0.1,
+      weightPercent: 32.9,
+    },
+    {
+      ticker: "AAPL",
+      name: "Apple Inc.",
+      assetClass: "Equity",
+      sector: "Technology",
+      quantity: 120,
+      price: 227.5,
+      costBasisPerShare: 200,
+      marketValue: 27300,
+      gainLoss: 3300,
+      dayChangeAmount: 100,
+      dayChangePercent: 2.4,
+      weightPercent: 41.6,
+    },
+    {
+      ticker: "CASH",
+      name: "Canadian Dollar Cash",
+      assetClass: "Cash",
+      sector: "Cash",
+      quantity: 8000,
+      price: 1,
+      costBasisPerShare: 0,
+      marketValue: 8000,
+      gainLoss: 0,
+      dayChangeAmount: 0,
+      dayChangePercent: 0,
+      weightPercent: 12.2,
+    },
+  ];
+
+  const asIs = (amount: number): number => amount;
+
+  test("sorts by weight, largest position first", () => {
+    const context = toHoldingContext(holdings, asIs);
+    assert.deepEqual(
+      context.map((item) => item.ticker),
+      ["AAPL", "BND", "CASH"]
+    );
+  });
+
+  test("carries the detail the model needs for a deeper answer", () => {
+    const [apple] = toHoldingContext(holdings, asIs);
+    assert.equal(apple.sector, "Technology");
+    assert.equal(apple.assetClass, "Equity");
+    assert.equal(apple.quantity, 120);
+    assert.equal(apple.marketValue, 27300);
+    assert.equal(apple.gainLoss, 3300);
+    assert.equal(apple.costBasisPerShare, 200);
+    assert.equal(apple.weightPercent, 41.6);
+  });
+
+  test("works out the return since purchase", () => {
+    const [apple, bond] = toHoldingContext(holdings, asIs);
+    assert.equal(apple.returnSincePurchasePercent.toFixed(2), "13.75");
+    assert.equal(bond.returnSincePurchasePercent.toFixed(2), "-2.57");
+  });
+
+  test("avoids dividing by a zero cost basis", () => {
+    const cash = toHoldingContext(holdings, asIs).find((item) => item.ticker === "CASH");
+    assert.ok(cash);
+    assert.equal(cash.returnSincePurchasePercent, 0);
+    assert.ok(Number.isFinite(cash.returnSincePurchasePercent));
+  });
+
+  test("converts every money field, so the context uses one currency", () => {
+    const [apple] = toHoldingContext(holdings, (amount) => amount * 0.73);
+    assert.equal(apple.marketValue.toFixed(2), "19929.00");
+    assert.equal(apple.price.toFixed(2), "166.07");
+    assert.equal(apple.costBasisPerShare.toFixed(2), "146.00");
+    assert.equal(apple.gainLoss.toFixed(2), "2409.00");
+  });
+
+  test("leaves percentages untouched by the currency", () => {
+    const cad = toHoldingContext(holdings, asIs)[0];
+    const usd = toHoldingContext(holdings, (amount) => amount * 0.73)[0];
+    assert.equal(usd.weightPercent, cad.weightPercent);
+    assert.equal(usd.dayChangePercent, cad.dayChangePercent);
+    assert.equal(usd.returnSincePurchasePercent, cad.returnSincePurchasePercent);
+  });
+
+  test("handles an empty portfolio", () => {
+    assert.deepEqual(toHoldingContext([], asIs), []);
+  });
+});
+
+describe("toAllocationContext", () => {
+  const slices = [
+    { assetClass: "Cash", value: 8000 },
+    { assetClass: "Equity", value: 32000 },
+  ];
+  const asIs = (amount: number): number => amount;
+
+  test("works out each share and sorts by it", () => {
+    const context = toAllocationContext(slices, asIs);
+    assert.deepEqual(
+      context.map((item) => item.assetClass),
+      ["Equity", "Cash"]
+    );
+    assert.equal(context[0].sharePercent, 80);
+    assert.equal(context[1].sharePercent, 20);
+  });
+
+  test("converts the values", () => {
+    const context = toAllocationContext(slices, (amount) => amount * 0.73);
+    assert.equal(context[0].value.toFixed(2), "23360.00");
+  });
+
+  test("avoids dividing by a zero total", () => {
+    const context = toAllocationContext([{ assetClass: "Cash", value: 0 }], asIs);
+    assert.equal(context[0].sharePercent, 0);
+  });
+
+  test("handles no slices", () => {
+    assert.deepEqual(toAllocationContext([], asIs), []);
   });
 });

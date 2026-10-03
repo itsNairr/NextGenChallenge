@@ -111,13 +111,28 @@ export interface SelectionSummary {
   readonly currency: CurrencyCode;
 }
 
-// Describe one holding fact sent as context.
+// Describe one holding sent as context. Money fields use the display currency.
 export interface HoldingContext {
   readonly ticker: string;
   readonly name: string;
   readonly assetClass: string;
+  readonly sector: string;
+  readonly quantity: number;
+  readonly price: number;
+  readonly costBasisPerShare: number;
+  readonly marketValue: number;
+  readonly gainLoss: number;
   readonly weightPercent: number;
   readonly dayChangePercent: number;
+  // Return on this position since purchase, as a percent.
+  readonly returnSincePurchasePercent: number;
+}
+
+// Describe one asset class share sent as context.
+export interface AllocationContext {
+  readonly assetClass: string;
+  readonly value: number;
+  readonly sharePercent: number;
 }
 
 // Name who wrote a chat message.
@@ -135,7 +150,11 @@ export interface ChatMessage {
 // Describe the request body sent to the Portfolio AI route in this app.
 export interface PortfolioAiRequest {
   readonly selection: SelectionSummary;
+  // Hold the holdings sorted by weight, largest first.
   readonly holdings: readonly HoldingContext[];
+  readonly allocation: readonly AllocationContext[];
+  // Count every holding, so the model knows when the list was trimmed.
+  readonly totalHoldings: number;
   readonly messages: readonly Pick<ChatMessage, "role" | "content">[];
 }
 

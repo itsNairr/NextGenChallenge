@@ -200,14 +200,33 @@ browser -> POST /api/portfolio-ai (same origin) -> OpenRouter
 system prompt and the context block, and calls OpenRouter. It returns only the reply text and the
 model name.
 
-The route also:
+### What the model receives
 
-- validates the body and rejects a malformed selection or an empty message list with HTTP 400,
-- caps the request at 12 messages, 2000 characters each, and 25 holdings, so it cannot be used as an
-  open proxy,
-- sends holdings as ticker, name, asset class, weight and day change only, never money amounts,
-- tells the model that the context block is data, not instructions,
-- tells the model it is not an adviser, and passes the provider error message through on failure.
+The context block carries the selected period plus the whole book, so answers can name positions
+rather than restate the headline move:
+
+- the period: start and end dates and values, change in money and percent, low and high,
+- every asset class with its value and share of the portfolio,
+- every holding, largest weight first: ticker, name, asset class, sector, quantity, price, cost
+  basis, market value, gain or loss, return since purchase, weight, and day change,
+- an estimated contribution per holding, which applies the holding weight to the period move.
+
+The contribution is labelled as an estimate in the prompt. The mock API has no per holding history
+for an arbitrary period, and its `/holdings/:ticker/detail` prices are generated from one shape
+function scaled by the starting price, so every holding moves the same percent over any window.
+Fetching those endpoints would add one request per holding and tell the model nothing new.
+
+Money values are converted before they are sent, so the period figures and the holdings always use
+the same currency as the dashboard.
+
+### Route safeguards
+
+- Validates the body and rejects a malformed selection or an empty message list with HTTP 400.
+- Caps the request at 12 messages, 2000 characters each, 25 holdings, and 25 asset classes, so it
+  cannot be used as an open proxy. Holdings arrive sorted by weight, so the trim keeps the largest
+  positions, and the model is told how many were left out.
+- Tells the model that the context block is data, not instructions.
+- Tells the model it is not an adviser, and passes the provider error message through on failure.
 
 ## Milestone status
 

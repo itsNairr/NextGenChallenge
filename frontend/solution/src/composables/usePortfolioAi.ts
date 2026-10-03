@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { askPortfolioAi, toApiError } from "@/api";
 import type { ApiError } from "@/api";
 import type {
+  AllocationContext,
   AsyncStatus,
   ChatMessage,
   HoldingContext,
@@ -15,6 +16,9 @@ export interface UsePortfolioAiOptions {
   // Hold null until the user selects a period on the chart.
   readonly selection: SelectionSummary | null;
   readonly holdings: readonly HoldingContext[];
+  readonly allocation: readonly AllocationContext[];
+  // Count every holding, even when the list sent is trimmed.
+  readonly totalHoldings: number;
   // Label the selected period for the message chip.
   readonly selectionLabel: string;
 }
@@ -34,6 +38,8 @@ export interface UsePortfolioAiResult {
 export function usePortfolioAi({
   selection,
   holdings,
+  allocation,
+  totalHoldings,
   selectionLabel,
 }: UsePortfolioAiOptions): UsePortfolioAiResult {
   const [messages, setMessages] = useState<readonly ChatMessage[]>([]);
@@ -78,6 +84,8 @@ export function usePortfolioAi({
             {
               selection,
               holdings,
+              allocation,
+              totalHoldings,
               messages: history.map(({ role, content }) => ({ role, content })),
             },
             { signal: current.signal }
@@ -103,7 +111,7 @@ export function usePortfolioAi({
 
       void run();
     },
-    [selection, holdings, selectionLabel, messages, status]
+    [selection, holdings, allocation, totalHoldings, selectionLabel, messages, status]
   );
 
   const reset = useCallback(() => {

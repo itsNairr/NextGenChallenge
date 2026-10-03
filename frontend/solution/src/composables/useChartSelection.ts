@@ -2,6 +2,8 @@
 
 import { useCallback, useMemo, useState } from "react";
 import type {
+  AllocationContext,
+  AllocationSlice,
   ChartSelection,
   ChartSeriesPoint,
   CurrencyCode,
@@ -10,15 +12,47 @@ import type {
   SelectionSummary,
 } from "@/types";
 
-// Reduce the holdings to the facts Portfolio AI needs. No money amounts are sent.
-export function toHoldingContext(holdings: readonly Holding[]): readonly HoldingContext[] {
-  return holdings.map((holding) => ({
-    ticker: holding.ticker,
-    name: holding.name,
-    assetClass: holding.assetClass,
-    weightPercent: holding.weightPercent,
-    dayChangePercent: holding.dayChangePercent,
-  }));
+// Build the holdings context for Portfolio AI, largest position first.
+// Money values are converted, so the whole context uses one currency.
+export function toHoldingContext(
+  holdings: readonly Holding[],
+  convertAmount: (amountInCad: number) => number
+): readonly HoldingContext[] {
+  return holdings
+    .map((holding) => ({
+      ticker: holding.ticker,
+      name: holding.name,
+      assetClass: holding.assetClass,
+      sector: holding.sector,
+      quantity: holding.quantity,
+      price: convertAmount(holding.price),
+      costBasisPerShare: convertAmount(holding.costBasisPerShare),
+      marketValue: convertAmount(holding.marketValue),
+      gainLoss: convertAmount(holding.gainLoss),
+      weightPercent: holding.weightPercent,
+      dayChangePercent: holding.dayChangePercent,
+      // Guard against a zero cost basis, which the cash position can have.
+      returnSincePurchasePercent:
+        holding.costBasisPerShare === 0
+          ? 0
+          : (holding.price / holding.costBasisPerShare - 1) * 100,
+    }))
+    .sort((a, b) => b.weightPercent - a.weightPercent);
+}
+
+// Build the asset class context, with each share of the total.
+export function toAllocationContext(
+  slices: readonly AllocationSlice[],
+  convertAmount: (amountInCad: number) => number
+): readonly AllocationContext[] {
+  const total = slices.reduce((sum, slice) => sum + slice.value, 0);
+  return slices
+    .map((slice) => ({
+      assetClass: slice.assetClass,
+      value: convertAmount(slice.value),
+      sharePercent: total === 0 ? 0 : (slice.value / total) * 100,
+    }))
+    .sort((a, b) => b.sharePercent - a.sharePercent);
 }
 
 // Describe the selected period with the figures the panel and the model both use.
