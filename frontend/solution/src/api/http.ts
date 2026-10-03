@@ -1,3 +1,4 @@
+// Summary: Resilient HTTP client wrapper with abort signal handling, timeouts, and typed errors.
 // Base URL of the portfolio mock API. Override it with NEXT_PUBLIC_API_BASE_URL.
 export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:4000";
@@ -47,25 +48,39 @@ interface ApiErrorBody {
 // Accept the query values the mock API understands.
 export type QueryValue = string | number | boolean | undefined;
 
+// Use this base URL to call a route inside this app instead of the portfolio API.
+export const SAME_ORIGIN = null;
+
 // Describe one request.
 export interface RequestOptions {
   readonly query?: Readonly<Record<string, QueryValue>>;
   readonly signal?: AbortSignal;
   readonly timeoutMs?: number;
+  // Pass SAME_ORIGIN to call this app's own API routes.
+  readonly baseUrl?: string | null;
 }
 
 // Build the full URL, dropping any query value that was not supplied.
 export function buildUrl(
   path: string,
   query: Readonly<Record<string, QueryValue>> = {},
-  baseUrl: string = API_BASE_URL
+  baseUrl: string | null = API_BASE_URL
 ): string {
-  const url = new URL(path, baseUrl);
+  const search = new URLSearchParams();
   for (const [key, value] of Object.entries(query)) {
     if (value !== undefined) {
-      url.searchParams.set(key, String(value));
+      search.set(key, String(value));
     }
   }
+  const queryString = search.toString();
+
+  // A same origin call stays relative, so it works in the browser without an origin.
+  if (baseUrl === SAME_ORIGIN) {
+    return queryString ? `${path}?${queryString}` : path;
+  }
+
+  const url = new URL(path, baseUrl);
+  url.search = queryString;
   return url.toString();
 }
 
@@ -106,17 +121,28 @@ function classifyThrown(error: unknown, signal?: AbortSignal): ApiErrorKind {
   return "network";
 }
 
-// Send a GET request and return the decoded JSON body.
+// Send a request and return the decoded JSON body.
 // Every failure arrives as an ApiError, so callers never see a raw fetch error.
-export async function getJson<T>(path: string, options: RequestOptions = {}): Promise<T> {
-  const { query, signal, timeoutMs = DEFAULT_TIMEOUT_MS } = options;
-  const url = buildUrl(path, query);
+async function request<T>(
+  method: "GET" | "POST",
+  path: string,
+  body: unknown,
+  options: RequestOptions
+): Promise<T> {
+  const { query, signal, timeoutMs = DEFAULT_TIMEOUT_MS, baseUrl = API_BASE_URL } = options;
+  const url = buildUrl(path, query, baseUrl);
+
+  const headers: Record<string, string> = { Accept: "application/json" };
+  if (body !== undefined) {
+    headers["Content-Type"] = "application/json";
+  }
 
   let response: Response;
   try {
     response = await fetch(url, {
-      method: "GET",
-      headers: { Accept: "application/json" },
+      method,
+      headers,
+      body: body === undefined ? undefined : JSON.stringify(body),
       signal: combineSignals(timeoutMs, signal),
     });
   } catch (error) {
@@ -136,6 +162,20 @@ export async function getJson<T>(path: string, options: RequestOptions = {}): Pr
   } catch {
     throw new ApiError("parse", "The service returned a response the app could not read.", url);
   }
+}
+
+// Send a GET request.
+export function getJson<T>(path: string, options: RequestOptions = {}): Promise<T> {
+  return request<T>("GET", path, undefined, options);
+}
+
+// Send a POST request with a JSON body.
+export function postJson<T>(
+  path: string,
+  body: unknown,
+  options: RequestOptions = {}
+): Promise<T> {
+  return request<T>("POST", path, body, options);
 }
 
 // Write the message for a failure that happened before the server answered.

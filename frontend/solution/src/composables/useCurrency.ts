@@ -1,3 +1,4 @@
+// Summary: Composable hook and pure functions for currency selection, persistence, and conversion.
 "use client";
 
 import { useState, useCallback, useMemo } from "react";

@@ -1,3 +1,4 @@
+// Summary: Metric grid component rendering total value, day change, and total return cards.
 "use client";
 
 import type { ComponentType } from "react";

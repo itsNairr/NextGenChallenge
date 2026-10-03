@@ -1,3 +1,4 @@
+// Summary: Pulsing skeleton placeholder for summary metric cards during initial data load.
 import { Card, Skeleton } from "./ui";
 
 // Match the number of tiles the summary renders.

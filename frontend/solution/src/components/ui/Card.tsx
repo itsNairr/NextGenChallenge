@@ -1,3 +1,4 @@
+// Summary: Foundational surface card container providing borders, padding, and subtle shadows.
 import type { ReactNode } from "react";
 
 // Define properties for the card surface.

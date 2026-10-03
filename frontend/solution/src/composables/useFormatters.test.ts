@@ -1,3 +1,4 @@
+// Summary: Unit tests verifying currency and percentage formatting rules and rounding accuracy.
 import { test, describe } from "vitest";
 import assert from "node:assert/strict";
 import { createFormatters, resolveDirection, roundToDisplay } from "@/composables/useFormatters";

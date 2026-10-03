@@ -1,3 +1,4 @@
+// Summary: Accessible segmented pill button control for single-selection option groups.
 "use client";
 
 // Describe one choice in the control.

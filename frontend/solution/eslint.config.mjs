@@ -1,3 +1,4 @@
+// Summary: ESLint configuration file defining Core Web Vitals and TypeScript rules.
 import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";

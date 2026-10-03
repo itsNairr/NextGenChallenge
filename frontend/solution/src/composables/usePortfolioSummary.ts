@@ -1,3 +1,4 @@
+// Summary: Composable hook transforming portfolio figures into formatted, color-coded summary tiles.
 "use client";
 
 import { useMemo } from "react";

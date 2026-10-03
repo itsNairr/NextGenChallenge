@@ -1,3 +1,4 @@
+// Summary: Core TypeScript domain types, API models, and shared interfaces.
 // Define common status types for composable hooks.
 export type AsyncStatus = "idle" | "loading" | "success" | "error";
 
@@ -80,4 +81,66 @@ export interface PortfolioResponse {
 // Describe the exchange rate endpoint response.
 export interface ExchangeRate {
   readonly CADtoUSD: number;
+}
+
+// Describe one point on the value chart, after currency conversion.
+export interface ChartSeriesPoint {
+  readonly date: string;
+  readonly value: number;
+}
+
+// Describe a period the user picked by clicking two points on the chart.
+export interface ChartSelection {
+  readonly startIndex: number;
+  readonly endIndex: number;
+}
+
+// Describe the facts about a selected period that Portfolio AI receives.
+export interface SelectionSummary {
+  readonly startDate: string;
+  readonly endDate: string;
+  readonly startValue: number;
+  readonly endValue: number;
+  readonly changeAmount: number;
+  readonly changePercent: number;
+  readonly lowValue: number;
+  readonly lowDate: string;
+  readonly highValue: number;
+  readonly highDate: string;
+  readonly pointCount: number;
+  readonly currency: CurrencyCode;
+}
+
+// Describe one holding fact sent as context.
+export interface HoldingContext {
+  readonly ticker: string;
+  readonly name: string;
+  readonly assetClass: string;
+  readonly weightPercent: number;
+  readonly dayChangePercent: number;
+}
+
+// Name who wrote a chat message.
+export type ChatRole = "user" | "assistant";
+
+// Describe one chat message.
+export interface ChatMessage {
+  readonly id: string;
+  readonly role: ChatRole;
+  readonly content: string;
+  // Name the chart period this message was asked about.
+  readonly chip?: string;
+}
+
+// Describe the request body sent to the Portfolio AI route in this app.
+export interface PortfolioAiRequest {
+  readonly selection: SelectionSummary;
+  readonly holdings: readonly HoldingContext[];
+  readonly messages: readonly Pick<ChatMessage, "role" | "content">[];
+}
+
+// Describe the response from the Portfolio AI route in this app.
+export interface PortfolioAiResponse {
+  readonly reply: string;
+  readonly model: string;
 }

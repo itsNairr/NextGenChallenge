@@ -1,3 +1,4 @@
+// Summary: Theme toggle button switching between light mode and dark mode.
 "use client";
 
 import { useTheme } from "@/composables";

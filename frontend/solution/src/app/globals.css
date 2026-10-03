@@ -1,3 +1,4 @@
+/* Summary: Global Tailwind CSS styling rules, theme variables, and typography definitions. */
 @import "tailwindcss";
 
 /* Drive dark mode from the data-theme attribute so a toggle can control it. */
@@ -32,6 +33,8 @@
   --color-loss-soft: var(--sc-loss-soft);
   --color-flat: var(--sc-flat);
   --color-flat-soft: var(--sc-flat-soft);
+  --color-selection: var(--sc-selection);
+  --color-selection-soft: var(--sc-selection-soft);
 
   /* Rounded corners are kept, unlike the square Electric Mind site. */
   --radius-card: 18px;
@@ -63,6 +66,8 @@
   --sc-loss-soft: #f8ece9;
   --sc-flat: #666666;
   --sc-flat-soft: #ededea;
+  --sc-selection: #9b5cf0;
+  --sc-selection-soft: rgba(155, 92, 240, 0.16);
 }
 
 /* Dark theme, built from the inverted Electric Mind scheme. */
@@ -82,6 +87,8 @@
   --sc-loss-soft: rgba(255, 138, 117, 0.14);
   --sc-flat: #a39e98;
   --sc-flat-soft: rgba(255, 255, 255, 0.08);
+  --sc-selection: #c89ffd;
+  --sc-selection-soft: rgba(200, 159, 253, 0.20);
 }
 
 body {

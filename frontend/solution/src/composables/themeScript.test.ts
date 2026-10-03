@@ -1,3 +1,4 @@
+// Summary: Unit tests verifying inline theme script execution in simulated browser contexts.
 import { test, describe } from "vitest";
 import assert from "node:assert/strict";
 import vm from "node:vm";

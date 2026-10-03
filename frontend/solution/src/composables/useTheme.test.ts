@@ -1,3 +1,4 @@
+// Summary: Unit tests validating theme identification, toggling, and fallback resolution.
 import { test, describe } from "vitest";
 import assert from "node:assert/strict";
 import { isThemeName, oppositeTheme, resolveInitialTheme } from "@/composables/useTheme";

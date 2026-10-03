@@ -1,6 +1,7 @@
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
 
+// Run only the tests that call the real mock API. See npm run test:live.
 export default defineConfig({
   resolve: {
     alias: {
@@ -9,8 +10,6 @@ export default defineConfig({
   },
   test: {
     environment: "node",
-    include: ["src/**/*.test.ts"],
-    // The live suite needs the mock API running, so keep it out of the default run.
-    exclude: ["**/node_modules/**", "src/api/live.test.ts"],
+    include: ["src/api/live.test.ts"],
   },
 });

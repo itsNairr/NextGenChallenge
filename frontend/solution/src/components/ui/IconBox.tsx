@@ -1,3 +1,4 @@
+// Summary: Rounded chip container for consistent icon placement and background accents.
 import type { ReactNode } from "react";
 
 // Define properties for the icon chip.

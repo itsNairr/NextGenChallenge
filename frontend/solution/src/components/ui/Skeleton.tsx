@@ -1,3 +1,4 @@
+// Summary: Low-level animated placeholder element for loading state representations.
 // Define properties for the placeholder block.
 interface SkeletonProps {
   readonly className?: string;

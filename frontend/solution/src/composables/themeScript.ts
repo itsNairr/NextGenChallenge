@@ -1,3 +1,4 @@
+// Summary: Inline theme detection script preventing flash of unstyled content on initial paint.
 // Hold the theme constants shared by the inline script and the composable.
 // Keeping them here stops the storage key and the attribute name from drifting apart.
 

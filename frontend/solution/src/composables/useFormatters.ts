@@ -1,3 +1,4 @@
+// Summary: Composable hook and pure utilities for rounding, currency formatting, and percentages.
 "use client";
 
 import { useMemo } from "react";

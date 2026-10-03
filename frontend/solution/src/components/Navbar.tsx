@@ -1,3 +1,4 @@
+// Summary: Persistent top navigation bar displaying the Electric Mind brand and utility controls.
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { ArrowRightIcon, Button, ElectricMindSymbol, ElectricMindWordmark, ThemeToggle } from "./ui";
@@ -30,9 +31,6 @@ export function Navbar({ activeId, actions }: NavbarProps) {
             <ElectricMindWordmark className="h-4 w-auto shrink-0" />
           </div>
           <span className="hidden h-4 w-px bg-line sm:inline-block" aria-hidden="true" />
-          <span className="hidden text-sm font-semibold tracking-tight text-heading sm:inline-block">
-            Wealth<span className="text-subtle">/Portfolio</span>
-          </span>
         </Link>
 
         {/* Primary navigation */}

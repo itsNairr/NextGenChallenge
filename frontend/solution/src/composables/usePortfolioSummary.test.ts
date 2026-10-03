@@ -1,15 +1,50 @@
+// Summary: Unit tests validating metric calculation, sign formatting, and color tones.
 import { test, describe } from "vitest";
 import assert from "node:assert/strict";
 import { buildSummaryMetrics } from "@/composables/usePortfolioSummary";
 import { convertFromCad } from "@/composables/useCurrency";
-import { SUMMARY_SCENARIOS } from "@/mocks";
 import type { CurrencyCode, PortfolioSummary } from "@/types";
 
-// Look up a named mock summary.
+// Hold one summary per state under test. All money values are CAD.
+// The default case uses the sample from REQUIREMENTS.md task 2.
+const FIXTURES: Readonly<Record<string, PortfolioSummary>> = {
+  default: {
+    totalMarketValue: 482350.12,
+    dayChangeAmount: 1520.44,
+    dayChangePercent: 0.32,
+    totalReturnSinceInception: 0.187,
+  },
+  negative: {
+    totalMarketValue: 311204.8,
+    dayChangeAmount: -2184.17,
+    dayChangePercent: -0.69,
+    totalReturnSinceInception: -0.0425,
+  },
+  zero: {
+    totalMarketValue: 482350.12,
+    dayChangeAmount: 0,
+    dayChangePercent: 0,
+    totalReturnSinceInception: 0,
+  },
+  "large-value": {
+    totalMarketValue: 18472650934.55,
+    dayChangeAmount: 24158903.12,
+    dayChangePercent: 0.13,
+    totalReturnSinceInception: 1.4062,
+  },
+  empty: {
+    totalMarketValue: 0,
+    dayChangeAmount: 0,
+    dayChangePercent: 0,
+    totalReturnSinceInception: 0,
+  },
+};
+
+// Look up a named fixture.
 function scenario(id: string): PortfolioSummary {
-  const match = SUMMARY_SCENARIOS.find((item) => item.id === id);
-  assert.ok(match, `missing scenario ${id}`);
-  return match.summary;
+  const match = FIXTURES[id];
+  assert.ok(match, `missing fixture ${id}`);
+  return match;
 }
 
 // Build the metrics for one summary in one currency.

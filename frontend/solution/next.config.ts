@@ -1,7 +1,8 @@
+// Summary: Next.js framework configuration file.
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // Add framework configuration options here.
 };
 
 export default nextConfig;

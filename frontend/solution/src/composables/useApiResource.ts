@@ -1,3 +1,4 @@
+// Summary: Composable hook providing async status, data caching, abort signals, and refetching.
 "use client";
 
 import { useCallback, useEffect, useState } from "react";

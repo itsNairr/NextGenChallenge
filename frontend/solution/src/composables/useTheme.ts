@@ -1,3 +1,4 @@
+// Summary: Composable hook managing light and dark theme state and DOM attribute synchronization.
 "use client";
 
 import { useCallback, useLayoutEffect, useState } from "react";

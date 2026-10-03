@@ -1,3 +1,4 @@
+// Summary: Inline SVG iconography and official Electric Mind brand vector components.
 // Define the shared shape for every inline icon.
 interface IconProps {
   readonly className?: string;

@@ -11,16 +11,39 @@ npm run dev
 
 Open <http://localhost:3000>.
 
-The mock API is optional for the current milestones. Start it from the repository root when you need it:
+The dashboard reads live data, so start the mock API first, from the repository root:
 
 ```sh
 node frontend/mock-server.mjs
 ```
 
+It listens on `http://localhost:4000`. Override that with `NEXT_PUBLIC_API_BASE_URL`.
+
+Portfolio AI needs an OpenRouter key. Copy `.env.example` to `.env.local` and fill it in:
+
+```sh
+cp .env.example .env.local
+```
+
+```
+OPENROUTER_API_KEY=sk-or-v1-...
+OPENROUTER_MODEL=anthropic/claude-sonnet-5
+```
+
+The key is read only on the server, in `src/app/api/portfolio-ai/route.ts`. Without it the panel
+reports that the key is missing; the rest of the dashboard still works.
+
 ## Run the tests
 
 ```sh
 npm test
+```
+
+That suite is hermetic: it stubs `fetch` and needs no server. To check the client against the running mock
+API as well:
+
+```sh
+npm run test:live
 ```
 
 Other scripts: `npm run lint`, `npm run build`, `npm run test:watch`.
@@ -100,13 +123,42 @@ Three details make this flicker free and safe:
 
 ```
 src/
+  api/            API client: http.ts (fetch wrapper, errors) and api.ts (endpoints)
   app/            Route, root layout, global styles and design tokens
-  components/     Feature components (navbar, page header, summary card)
-  components/ui/  Design system primitives (Card, Button, IconBox, MiniStatistics, icons)
+  components/     Feature components (navbar, page header, summary card, states)
+  components/ui/  Design system primitives (Card, Button, MiniStatistics, icons)
   composables/    Reusable state and domain logic
-  mocks/          Mock datasets
   types/          Shared TypeScript contracts
 ```
+
+## API layer
+
+`src/api/http.ts` holds the transport. `getJson` is the only way the app talks to the network.
+
+- Every failure arrives as a typed `ApiError`, so callers never handle a raw fetch rejection. Its `kind` is
+  one of `network`, `timeout`, `http`, `parse`, or `aborted`, plus the HTTP `status` and the API's own
+  `error` code when the server answered.
+- Non-OK responses are read for the mock's `{ error, message }` body, and fall back to a status message when
+  the body is not JSON.
+- Requests carry a 10 second timeout, joined with the caller's abort signal.
+- `describeApiError` turns an error into a line the user can act on, including how to start the mock.
+
+`src/api/api.ts` holds the endpoints the current components need:
+
+| Function | Route |
+| --- | --- |
+| `getPortfolio(accountId, options)` | `/portfolios/:id` |
+| `getExchangeRate(options)` | `/exchange-rate` |
+| `askPortfolioAi(body, options)` | `/api/portfolio-ai` in this app, not the mock |
+
+Both accept an abort signal and the mock's test controls (`scenario`, `delayMs`, `fail`). The interface
+does not use those controls; the live test suite does, to drive the loading and error paths. Both check the
+response shape and raise a `parse` error if the figures are missing, so a wrong base URL fails loudly
+instead of rendering blank tiles. `/accounts` and `/holdings/:ticker/detail` arrive with milestones 8 and 9.
+
+`useApiResource` wraps a request in loading, success, and error state, aborts in flight work when its inputs
+change or the component unmounts, and exposes `refetch` for the retry button. `usePortfolio` and
+`useExchangeRate` build on it.
 
 Each composable exports a pure function next to its hook, so the domain logic is testable without React:
 
@@ -115,13 +167,57 @@ Each composable exports a pure function next to its hook, so the domain logic is
 - `buildSummaryMetrics` / `usePortfolioSummary`
 - `resolveInitialTheme`, `oppositeTheme` / `useTheme`
 
+## Portfolio value chart
+
+`PortfolioValueChart` draws the history as inline SVG. No charting library was added.
+
+- One 2px line in the brand colour, with a gradient wash below it. A single series needs no legend,
+  so the card title names it.
+- Hairline gridlines, y-axis ticks rounded to clean numbers, and x-axis labels taken from real dates
+  in the series.
+- A crosshair snaps to the nearest date and shows the exact date and value. The same readout follows
+  keyboard focus: arrow keys step through points, Home and End jump to the ends.
+- Gaps break the line into separate paths rather than interpolating across them, and the missing
+  stretch is shaded. The `gaps` dataset produces 58 runs and 57 shaded bands.
+- One and two point histories render as markers, so they do not look degenerate.
+- A collapsed table view keeps every value reachable without hovering. Its rows are built only while
+  it is open.
+
+Geometry lives in `useChartGeometry` as pure functions, so it is tested without a DOM.
+
+## Portfolio AI
+
+Click two points on the line to select a period. The period is shaded, summarised with its change,
+low and high, and can be sent to Portfolio AI.
+
+The browser never sees the OpenRouter key:
+
+```
+browser -> POST /api/portfolio-ai (same origin) -> OpenRouter
+```
+
+`src/app/api/portfolio-ai/route.ts` runs on the server. It reads `OPENROUTER_API_KEY`, builds the
+system prompt and the context block, and calls OpenRouter. It returns only the reply text and the
+model name.
+
+The route also:
+
+- validates the body and rejects a malformed selection or an empty message list with HTTP 400,
+- caps the request at 12 messages, 2000 characters each, and 25 holdings, so it cannot be used as an
+  open proxy,
+- sends holdings as ticker, name, asset class, weight and day change only, never money amounts,
+- tells the model that the context block is data, not instructions,
+- tells the model it is not an adviser, and passes the provider error message through on failure.
+
 ## Milestone status
 
 | # | Task | Status |
 | --- | --- | --- |
 | 1 | Scaffold the base app shell | Done |
 | 2 | Portfolio summary card | Done |
-| 3-10 | Holdings, charts, selectors, detail view, widgets | Not started |
+| 4 | Portfolio value line chart | Done |
+| 3, 5-10 | Holdings table, allocation chart, range selector, detail view, widgets | Not started |
+| - | Portfolio AI (addition, not in the spec) | Done |
 
 ### Milestone 2 notes
 
@@ -140,13 +236,29 @@ Direction states:
 - Zero: neutral navy value, dash icon, grey icon tint. A zero day change is never styled as a gain or a loss.
 - Total market value carries no direction, so it is never coloured.
 
-Use the **Mock dataset** control under the summary to switch between the positive, negative, zero, large value,
-and empty datasets. The tiles re-render from the new input without a page reload.
+All figures come from the API. The page shows a skeleton while the request is in flight, and an error panel
+with a retry button when it fails. Stop the mock server to see that panel.
+
+There is no dataset picker in the interface. To check another dataset, call the API with its `scenario`
+parameter and compare:
+
+```sh
+curl "http://localhost:4000/portfolios/P-9001?scenario=negative"
+curl "http://localhost:4000/portfolios/P-9001?scenario=zero"
+```
+
+`npm run test:live` does this for every state, including the 503 and 404 paths.
 
 ## Assumptions
 
-- All mock money values are native CAD. The currency toggle converts for display only, at a fixed rate of
-  `0.73` CAD to USD. Milestone 7 will read the rate from `/exchange-rate`.
+- All API money values are native CAD. The currency toggle converts for display only, using the rate from
+  `/exchange-rate`. If that request fails the app falls back to the documented `0.73`, which is the same
+  value the mock returns.
+- The page loads account `P-9001`. The account selector arrives in milestone 8.
+- The chart y-axis fits the data instead of starting at zero, which is the usual convention for a
+  value-over-time line.
+- A gap is any step longer than 1.5 times the usual step between points.
+- Portfolio AI reads fictional mock data. It is a demonstration, not advice.
 - Direction colour is derived from the native CAD figure, so toggling currency never changes a tile's colour.
 - Figures are rounded to two decimals before both formatting and direction checks, so a value that rounds to
   zero reads as neutral rather than showing a signed `0.00`.
@@ -162,5 +274,9 @@ and empty datasets. The tiles re-render from the new input without a page reload
 ## Unfinished work
 
 - Milestones 3 to 10.
-- No live API calls yet, so loading and error states are not built.
-- Tests cover the domain logic. Component rendering tests need a DOM environment and are not set up yet.
+- Tests cover the domain logic and the API client. Component rendering tests need a DOM environment and are
+  not set up yet.
+- The date range selector (milestone 6) is not built, so the chart always shows the full history.
+- Portfolio AI replies are not streamed. The panel waits for the whole answer.
+- Requests are not cached or deduplicated. A data layer such as TanStack Query would be worth adding once
+  several components fetch at once.

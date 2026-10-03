@@ -1,5 +1,11 @@
-import type { ExchangeRate, PortfolioResponse } from "@/types";
-import { ApiError, buildUrl, getJson } from "./http";
+// Summary: API client functions for fetching portfolio data, scenarios, and exchange rates.
+import type {
+  ExchangeRate,
+  PortfolioAiRequest,
+  PortfolioAiResponse,
+  PortfolioResponse,
+} from "@/types";
+import { ApiError, buildUrl, getJson, postJson, SAME_ORIGIN } from "./http";
 import type { RequestOptions } from "./http";
 
 // List the datasets the mock API serves. Source: GET /scenarios.
@@ -96,4 +102,31 @@ export async function getExchangeRate(options: ApiOptions = {}): Promise<Exchang
   );
 
   return body;
+}
+
+// Path of the Portfolio AI route inside this app.
+const PORTFOLIO_AI_PATH = "/api/portfolio-ai";
+
+// Ask Portfolio AI about the selected period.
+// The request goes to this app, not to OpenRouter. The server holds the API key.
+export async function askPortfolioAi(
+  body: PortfolioAiRequest,
+  options: Pick<ApiOptions, "signal" | "timeoutMs"> = {}
+): Promise<PortfolioAiResponse> {
+  const result = await postJson<PortfolioAiResponse>(PORTFOLIO_AI_PATH, body, {
+    signal: options.signal,
+    // The model can take a while, so allow more time than a data request.
+    timeoutMs: options.timeoutMs ?? 40000,
+    baseUrl: SAME_ORIGIN,
+  });
+
+  if (typeof result?.reply !== "string" || result.reply.length === 0) {
+    throw new ApiError(
+      "parse",
+      "Portfolio AI returned no text.",
+      buildUrl(PORTFOLIO_AI_PATH, {}, SAME_ORIGIN)
+    );
+  }
+
+  return result;
 }

@@ -7,7 +7,9 @@ type ButtonVariant = "primary" | "ghost";
 interface ButtonProps {
   readonly children: ReactNode;
   readonly variant?: ButtonVariant;
+  readonly type?: "button" | "submit";
   readonly onClick?: () => void;
+  readonly disabled?: boolean;
   readonly className?: string;
 }
 
@@ -23,14 +25,17 @@ const VARIANT_CLASSES: Record<ButtonVariant, string> = {
 export function Button({
   children,
   variant = "primary",
+  type = "button",
   onClick,
+  disabled = false,
   className = "",
 }: ButtonProps) {
   return (
     <button
-      type="button"
+      type={type}
       onClick={onClick}
-      className={`eyebrow inline-flex cursor-pointer items-center gap-2 rounded-control border px-5 py-3 font-medium transition-colors ${VARIANT_CLASSES[variant]} ${className}`}
+      disabled={disabled}
+      className={`eyebrow inline-flex cursor-pointer items-center gap-2 rounded-control border px-5 py-3 font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${VARIANT_CLASSES[variant]} ${className}`}
     >
       {children}
     </button>

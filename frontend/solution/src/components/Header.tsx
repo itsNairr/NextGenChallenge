@@ -1,3 +1,4 @@
+// Summary: Page heading component with eyebrow badge, title, and slot for header actions.
 import type { ReactNode } from "react";
 
 // Define properties for the page heading.

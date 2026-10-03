@@ -1,3 +1,4 @@
+// Summary: Atomic metric card displaying an eyebrow label, bold numerical value, and footer.
 import type { ReactNode } from "react";
 import { Card } from "./Card";
 

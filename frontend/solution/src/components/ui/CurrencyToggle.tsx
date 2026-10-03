@@ -1,3 +1,4 @@
+// Summary: Segmented toggle control switching the active dashboard currency between CAD and USD.
 "use client";
 
 import type { CurrencyCode } from "@/types";

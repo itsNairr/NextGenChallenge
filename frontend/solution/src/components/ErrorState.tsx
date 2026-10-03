@@ -1,3 +1,4 @@
+// Summary: User-friendly error display card with error diagnostic messaging and retry button.
 "use client";
 
 import { describeApiError } from "@/api";

@@ -1,3 +1,4 @@
+// Summary: Entry point exporting atomic design system components and primitives.
 // Export design system primitives from a single entry point.
 export * from "./Button";
 export * from "./Card";
