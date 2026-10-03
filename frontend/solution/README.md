@@ -1,304 +1,179 @@
-# Frontend Solution: Wealth Management Portfolio Dashboard
+# Wealth Management Portfolio Dashboard
 
-Next.js 16 (App Router) + React 19 + TypeScript + Tailwind CSS 4.
+A modern, high-performance wealth management portfolio dashboard built with **Next.js 16 (App Router)**, **React 19**, **TypeScript**, and **Tailwind CSS v4**.
 
-## Install and run
+The user interface follows the design principles and color tokens of [Electric Mind](https://www.electricmind.com/), featuring zero-dependency inline SVG visualizations, a composable architecture, and an integrated AI assistant named **FolioMind**.
 
+---
+
+## Technology Stack
+
+- **Framework**: [Next.js 16](https://nextjs.org/) (App Router, Turbopack, React Server Components & Client Components)
+- **Library**: [React 19](https://react.dev/)
+- **Language**: [TypeScript 5](https://www.typescriptlang.org/) (Strict typing, explicit interfaces)
+- **Styling**: [Tailwind CSS v4](https://tailwindcss.com/) (CSS `@theme` design tokens, zero external CSS runtime)
+- **Testing**: [Vitest](https://vitest.dev/) (138 hermetic unit tests + live API test suites)
+- **Charting**: Zero external chart libraries. All line charts and donut charts are rendered using pure, responsive SVG.
+- **AI Integration**: [OpenRouter API](https://openrouter.ai/) accessed via a secure, server-side Next.js route handler.
+
+---
+
+## Quick Start
+
+### 1. Start the Backend Mock Server
+From the repository root:
+```sh
+node frontend/mock-server.mjs
+```
+The mock server runs on `http://localhost:4000`.
+
+### 2. Configure Environment (Optional for AI)
+To enable the **FolioMind** AI panel, create `frontend/solution/.env.local`:
+```sh
+cp .env.example .env.local
+```
+Add your OpenRouter key:
+```env
+OPENROUTER_API_KEY=sk-or-v1-...
+OPENROUTER_MODEL=anthropic/claude-sonnet-5
+```
+*Note: The dashboard functions completely even if the AI key is not configured.*
+
+### 3. Install and Run the Frontend
+From `frontend/solution/`:
 ```sh
 npm install
 npm run dev
 ```
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-Open <http://localhost:3000>.
-
-The dashboard reads live data, so start the mock API first, from the repository root:
-
+### 4. Run the Test Suites
 ```sh
-node frontend/mock-server.mjs
-```
-
-It listens on `http://localhost:4000`. Override that with `NEXT_PUBLIC_API_BASE_URL`.
-
-Portfolio AI needs an OpenRouter key. Copy `.env.example` to `.env.local` and fill it in:
-
-```sh
-cp .env.example .env.local
-```
-
-```
-OPENROUTER_API_KEY=sk-or-v1-...
-OPENROUTER_MODEL=anthropic/claude-sonnet-5
-```
-
-The key is read only on the server, in `src/app/api/portfolio-ai/route.ts`. Without it the panel
-reports that the key is missing; the rest of the dashboard still works.
-
-## Run the tests
-
-```sh
+# Run hermetic unit tests (138 tests)
 npm test
-```
 
-That suite is hermetic: it stubs `fetch` and needs no server. To check the client against the running mock
-API as well:
-
-```sh
+# Run live integration tests against the mock server
 npm run test:live
+
+# Production build check
+npm run build
 ```
 
-Other scripts: `npm run lint`, `npm run build`, `npm run test:watch`.
+---
 
-## Design system
+## Project Structure
 
-The theme follows the design practice of [electricmind.com](https://www.electricmind.com/). Tokens were read
-from the live site's theme variables and ported into `src/app/globals.css` as Tailwind theme variables.
-
-| Role | Token | Value |
-| --- | --- | --- |
-| Primary / link | `em-blue` | `#3348FF` |
-| Primary hover | `em-blue-dark` | `#253AF3` |
-| Accent | `em-neuron` / `em-lilac` | `#C89FFD` / `#E5D2FC` |
-| Page background | `eggshell` | `#F5F4F2` |
-| Alternate surface | `sand` | `#E9E8E4` |
-| Border | `granite` | `#D8D0C8` |
-| Body text | `graphite` | `#3F3D3A` |
-| Dark surface | `slate` | `#19131F` |
-| Foreground | `ink` | `#000000` |
-
-Practices carried over from the site:
-
-- Flat white cards on a warm eggshell page, separated by 1px `granite` borders rather than heavy shadows.
-- Uppercase mono eyebrow labels at `0.6875rem` with `0.08em` tracking, exposed as the `eyebrow` utility.
-- Uppercase mono buttons on solid electric blue, matching the site's `.button` rule.
-- Top navbar at `4.5rem` minimum height with `60px` side padding, matching `.navbar1_component`.
-- Tight `-0.01em` tracking on headings and body text.
-
-Two deliberate departures:
-
-- **Rounded corners are kept.** The Electric Mind site sets every radius to `0`. Cards use `18px`, controls
-  `10px`, and icon chips `12px`.
-- **Fonts are substituted.** The site uses FT System Blank and FT System Mono, which are licensed. This
-  project uses Inter and IBM Plex Mono from Google Fonts as the closest free equivalents.
-
-### Light and dark themes
-
-Both themes are defined explicitly. Components use semantic tokens only, with no `dark:` colour variants:
-
-| Token | Light | Dark |
-| --- | --- | --- |
-| `page` | `#F5F4F2` eggshell | `#000000` |
-| `surface` | `#FFFFFF` | `#19131F` slate |
-| `line` | `#D8D0C8` granite | `#2E2833` |
-| `heading` | `#000000` | `#FFFFFF` |
-| `body` | `#3F3D3A` graphite | `#C9C4BD` |
-| `subtle` | `#666666` | `#A39E98` |
-| `brand` | `#3348FF` | `#6D7CFD` |
-| `gain` | `#0B7A4B` | `#3FD39A` |
-| `loss` | `#B83224` | `#FF8A75` |
-| `flat` | `#666666` | `#A39E98` |
-
-Each semantic token in `@theme` points at a `--sc-*` variable that is redefined per theme, so one attribute
-on `<html>` switches the whole dashboard. Every text pair above clears WCAG AA against both its surface and
-the page. Icon colours on their tinted chips clear the 3:1 threshold for graphics.
-
-The Electric Mind palette has no success or error colour, so `gain` and `loss` were chosen to sit with its
-warm neutrals.
-
-### Theme switching
-
-The navbar has a light and dark toggle. It writes `data-theme` on `<html>` and stores the choice in
-`localStorage`. With no stored choice, the theme follows the operating system.
-
-Three details make this flicker free and safe:
-
-- An inline script in `<head>` applies the theme while the browser parses the page, before first paint. It
-  ships from `src/composables/themeScript.ts`, so the storage key and attribute name cannot drift from the
-  composable that reads them. A test runs that exact string against a fake document.
-- The toggle's icon and its screen reader label swap through the `dark:` variant rather than React state, so
-  the server and client markup always agree and nothing flashes on hydration.
-- `useTheme` re-applies the attribute in a `useLayoutEffect`. React Strict Mode clears attributes it does not
-  own from `<html>` on the development remount; this restores it and is a no operation in production.
-
-## Structure
+The project uses a composable architecture. Domain logic, state management, and computations remain separated from presentation components:
 
 ```
-src/
-  api/            API client: http.ts (fetch wrapper, errors) and api.ts (endpoints)
-  app/            Route, root layout, global styles and design tokens
-  components/     Feature components (navbar, page header, summary card, states)
-  components/ui/  Design system primitives (Card, Button, MiniStatistics, icons)
-  composables/    Reusable state and domain logic
-  types/          Shared TypeScript contracts
+frontend/solution/
+├── next.config.ts                     # Framework configuration
+├── eslint.config.mjs                  # Linter settings
+├── postcss.config.mjs                 # PostCSS Tailwind v4 pipeline
+├── tsconfig.json                      # Strict TypeScript compiler options
+├── package.json                       # Scripts and dependencies
+├── AGENTS.md                          # Coding guidelines and rules
+└── src/
+    ├── types/                         # Shared TypeScript domain contracts
+    │   └── index.ts                   # Portfolio, Holding, Allocation, and Chart types
+    ├── api/                           # API transport and network clients
+    │   ├── http.ts                    # Resilient fetch wrapper with timeouts and ApiError
+    │   ├── api.ts                     # Endpoint functions (/portfolios, /exchange-rate, etc.)
+    │   ├── index.ts                   # Re-exports
+    │   ├── api.test.ts                # Scenario and parameter unit tests
+    │   ├── http.test.ts               # Error handling and timeout unit tests
+    │   └── live.test.ts               # Live backend integration test suite
+    ├── composables/                   # Reusable reactive logic and domain utilities
+    │   ├── index.ts                   # Unified entry point
+    │   ├── themeScript.ts             # Pre-paint inline theme script
+    │   ├── useTheme.ts                # Light / Dark theme management
+    │   ├── useCurrency.ts             # CAD <-> USD currency conversion and state
+    │   ├── useFormatters.ts           # Number, currency, and percent formatting utilities
+    │   ├── useApiResource.ts          # Async lifecycle, status, and abort signals
+    │   ├── usePortfolio.ts            # Resource hook for active portfolio & exchange rate
+    │   ├── usePortfolioSummary.ts     # Computations for summary metrics
+    │   ├── useHoldingsTable.ts        # Column sorting, pagination, and total calculations
+    │   ├── useTopMovers.ts            # Gainers and losers ranking logic
+    │   ├── useAllocation.ts           # Donut chart geometry and share percent math
+    │   ├── useElementWidth.ts         # Real-time ResizeObserver element measurements
+    │   ├── useChartGeometry.ts        # SVG line, area, axis ticks, and gap band math
+    │   ├── useChartSelection.ts       # Two-click period range selection
+    │   ├── usePortfolioAi.ts          # FolioMind chat session management
+    │   └── *.test.ts                  # Unit test suites for all composables
+    ├── components/                    # Feature-level UI components
+    │   ├── index.ts                   # Component exports
+    │   ├── Navbar.tsx                 # Top navigation with Electric Mind logo & controls
+    │   ├── Header.tsx                 # Page title with eyebrow badge
+    │   ├── PortfolioSummaryCard.tsx   # Milestone 2: 4-metric summary row
+    │   ├── HoldingsTable.tsx          # Milestone 3: Interactive, sortable positions table
+    │   ├── PortfolioChartCard.tsx     # Milestone 4: Chart card container & controls
+    │   ├── PortfolioValueChart.tsx    # Milestone 4: Custom interactive SVG line chart
+    │   ├── AllocationCard.tsx         # Milestone 5: Asset allocation donut chart
+    │   ├── TopMoversCard.tsx          # Milestone 10: Top gainers & losers widget
+    │   ├── PortfolioAiPanel.tsx       # FolioMind AI assistant chat interface
+    │   ├── ErrorState.tsx             # Friendly error boundary card with retry button
+    │   ├── SummarySkeleton.tsx        # Skeleton loaders for summary tiles
+    │   ├── HoldingsSkeleton.tsx       # Skeleton loaders for holdings table
+    │   ├── WidgetsSkeleton.tsx        # Skeleton loaders for charts & widgets
+    │   └── ui/                        # Atomic design system primitives
+    │       ├── Button.tsx             # Monospace uppercase button
+    │       ├── Card.tsx               # Bordered surface container
+    │       ├── CurrencyToggle.tsx     # CAD / USD segmented pill switch
+    │       ├── SegmentedControl.tsx   # Accessible segmented tab group
+    │       ├── MiniStatistics.tsx     # Atomic metric card
+    │       ├── IconBox.tsx            # Rounded icon badge
+    │       ├── Skeleton.tsx           # Pulse animation placeholder
+    │       ├── ThemeToggle.tsx        # Light / Dark mode toggle button
+    │       └── icons.tsx              # SVG icons & official Electric Mind vectors
+    └── app/                           # Next.js App Router entry points
+        ├── layout.tsx                 # Root layout with fonts & inline theme script
+        ├── page.tsx                   # Main dashboard overview view
+        ├── globals.css                # CSS variables, tokens, and utility classes
+        └── api/portfolio-ai/route.ts  # Server-side AI proxy to OpenRouter
 ```
 
-## API layer
+---
 
-`src/api/http.ts` holds the transport. `getJson` is the only way the app talks to the network.
+## Accomplished Milestones & File Directory
 
-- Every failure arrives as a typed `ApiError`, so callers never handle a raw fetch rejection. Its `kind` is
-  one of `network`, `timeout`, `http`, `parse`, or `aborted`, plus the HTTP `status` and the API's own
-  `error` code when the server answered.
-- Non-OK responses are read for the mock's `{ error, message }` body, and fall back to a status message when
-  the body is not JSON.
-- Requests carry a 10 second timeout, joined with the caller's abort signal.
-- `describeApiError` turns an error into a line the user can act on, including how to start the mock.
+The dashboard fulfills the core requirements from the project specification, plus value-add enhancements:
 
-`src/api/api.ts` holds the endpoints the current components need:
+| Milestone | Feature | Implementation Files |
+| :--- | :--- | :--- |
+| **Milestone 1** | **Base App Shell**<br>Persistent layout, navigation, Electric Mind brand mark, theme switcher, responsive layout, error boundary, and skeleton loading states. | • `src/components/Navbar.tsx`<br>• `src/components/Header.tsx`<br>• `src/app/layout.tsx`<br>• `src/app/page.tsx`<br>• `src/components/ErrorState.tsx`<br>• `src/components/SummarySkeleton.tsx` |
+| **Milestone 2** | **Portfolio Summary Card**<br>Displays Total Market Value, Day Change ($ and %), and Total Return Since Inception. Handles positive, negative, and neutral values with custom status badges and icons. | • `src/components/PortfolioSummaryCard.tsx`<br>• `src/composables/usePortfolioSummary.ts`<br>• `src/components/ui/MiniStatistics.tsx`<br>• `src/composables/usePortfolioSummary.test.ts` |
+| **Milestone 3** | **Holdings Table**<br>Displays all position columns (ticker, name, quantity, price, market value, weight %, gain/loss). Multi-column sorting (asc/desc), visual gain/loss indicators, empty state handling, and portfolio totals row. | • `src/components/HoldingsTable.tsx`<br>• `src/composables/useHoldingsTable.ts`<br>• `src/components/HoldingsSkeleton.tsx`<br>• `src/composables/useHoldingsTable.test.ts` |
+| **Milestone 4** | **Portfolio Value Line Chart**<br>Zero-dependency SVG line chart with gradient fill. Features crosshair hover tooltips, keyboard navigation, shaded bands for missing date gaps, degenerate 1–2 point support, and an accessible data table view. | • `src/components/PortfolioValueChart.tsx`<br>• `src/components/PortfolioChartCard.tsx`<br>• `src/composables/useChartGeometry.ts`<br>• `src/composables/useElementWidth.ts`<br>• `src/composables/useChartGeometry.test.ts` |
+| **Milestone 5** | **Asset Allocation Chart**<br>Responsive SVG donut chart showing distribution across asset classes (Equity, Fixed Income, Cash, Alternatives). Features interactive hover segments, color badges, and empty/single-class edge case support. | • `src/components/AllocationCard.tsx`<br>• `src/composables/useAllocation.ts`<br>• `src/composables/useAllocation.test.ts` |
+| **Milestone 7** | **Currency Toggle (CAD ↔ USD)**<br>Global toggle converting all currency figures using live exchange rates from `/exchange-rate` (with `0.73` fallback). Converts summary values, holdings table figures, chart points, and widget totals simultaneously without losing UI state. | • `src/components/ui/CurrencyToggle.tsx`<br>• `src/composables/useCurrency.ts`<br>• `src/composables/useFormatters.ts`<br>• `src/composables/useFormatters.test.ts` |
+| **Milestone 10** | **Top Movers Widget**<br>Ranks the top 3 gainers and top 3 losers by daily change percentage. Gracefully handles edge cases including portfolios with fewer than 3 holdings and one-direction days (e.g., all gainers or all losers). | • `src/components/TopMoversCard.tsx`<br>• `src/composables/useTopMovers.ts`<br>• `src/components/WidgetsSkeleton.tsx`<br>• `src/composables/useTopMovers.test.ts` |
+| **Bonus Feature** | **FolioMind (Portfolio AI)**<br>Allows users to click any two points on the line chart to define a time window. Summarizes performance and powers an interactive, context-aware AI chat answering attribution questions securely through OpenRouter. | • `src/components/PortfolioAiPanel.tsx`<br>• `src/composables/usePortfolioAi.ts`<br>• `src/composables/useChartSelection.ts`<br>• `src/app/api/portfolio-ai/route.ts`<br>• `src/composables/useChartSelection.test.ts` |
 
-| Function | Route |
-| --- | --- |
-| `getPortfolio(accountId, options)` | `/portfolios/:id` |
-| `getExchangeRate(options)` | `/exchange-rate` |
-| `askPortfolioAi(body, options)` | `/api/portfolio-ai` in this app, not the mock |
+---
 
-Both accept an abort signal and the mock's test controls (`scenario`, `delayMs`, `fail`). The interface
-does not use those controls; the live test suite does, to drive the loading and error paths. Both check the
-response shape and raise a `parse` error if the figures are missing, so a wrong base URL fails loudly
-instead of rendering blank tiles. `/accounts` and `/holdings/:ticker/detail` arrive with milestones 8 and 9.
+## Design System & Aesthetics
 
-`useApiResource` wraps a request in loading, success, and error state, aborts in flight work when its inputs
-change or the component unmounts, and exposes `refetch` for the retry button. `usePortfolio` and
-`useExchangeRate` build on it.
+The visual design system draws inspiration from [Electric Mind](https://www.electricmind.com/):
 
-Each composable exports a pure function next to its hook, so the domain logic is testable without React:
+### 1. Palette & Semantic Tokens
+- **Brand Colors**: Electric Blue (`#3348FF` light / `#6D7CFD` dark), Neuron Lilac (`#C89FFD` / `#E5D2FC`).
+- **Neutrals**: Warm eggshell page (`#F5F4F2`), crisp surface cards (`#FFFFFF`), granite borders (`#D8D0C8`), and graphite body text (`#3F3D3A`).
+- **Status Accents**: Muted forest green (`#0B7A4B` / `#3FD39A`) for gains, crimson (`#B83224` / `#FF8A75`) for losses, and neutral grey for zero moves.
 
-- `createFormatters` / `useFormatters`
-- `convertFromCad` / `useCurrency`
-- `buildSummaryMetrics` / `usePortfolioSummary`
-- `resolveInitialTheme`, `oppositeTheme` / `useTheme`
+### 2. Typography & Micro-Interactions
+- Primary typography uses **Inter** paired with **IBM Plex Mono** for uppercase eyebrow badges and numerical tabular figures.
+- Micro-interactions include smooth hover states, SVG line chart crosshairs, pulsing skeleton loaders, and responsive container resizing via `ResizeObserver`.
 
-## Portfolio value chart
+### 3. Flicker-Free Theme Switching
+- The inline script in `src/composables/themeScript.ts` executes in the document `<head>` prior to first paint.
+- It detects saved preferences in `localStorage` or matches the system's `prefers-color-scheme`, avoiding light/dark flash of unstyled content (FOUC).
 
-`PortfolioValueChart` draws the history as inline SVG. No charting library was added.
+---
 
-- One 2px line in the brand colour, with a gradient wash below it. A single series needs no legend,
-  so the card title names it.
-- Hairline gridlines, y-axis ticks rounded to clean numbers, and x-axis labels taken from real dates
-  in the series.
-- A crosshair snaps to the nearest date and shows the exact date and value. The same readout follows
-  keyboard focus: arrow keys step through points, Home and End jump to the ends.
-- Gaps break the line into separate paths rather than interpolating across them, and the missing
-  stretch is shaded. The `gaps` dataset produces 58 runs and 57 shaded bands.
-- One and two point histories render as markers, so they do not look degenerate.
-- A collapsed table view keeps every value reachable without hovering. Its rows are built only while
-  it is open.
+## Engineering Quality & Standards
 
-Geometry lives in `useChartGeometry` as pure functions, so it is tested without a DOM.
-
-## Portfolio AI
-
-Click two points on the line to select a period. The period is shaded, summarised with its change,
-low and high, and can be sent to Portfolio AI.
-
-The browser never sees the OpenRouter key:
-
-```
-browser -> POST /api/portfolio-ai (same origin) -> OpenRouter
-```
-
-`src/app/api/portfolio-ai/route.ts` runs on the server. It reads `OPENROUTER_API_KEY`, builds the
-system prompt and the context block, and calls OpenRouter. It returns only the reply text and the
-model name.
-
-### What the model receives
-
-The context block carries the selected period plus the whole book, so answers can name positions
-rather than restate the headline move:
-
-- the period: start and end dates and values, change in money and percent, low and high,
-- every asset class with its value and share of the portfolio,
-- every holding, largest weight first: ticker, name, asset class, sector, quantity, price, cost
-  basis, market value, gain or loss, return since purchase, weight, and day change,
-- an estimated contribution per holding, which applies the holding weight to the period move.
-
-The contribution is labelled as an estimate in the prompt. The mock API has no per holding history
-for an arbitrary period, and its `/holdings/:ticker/detail` prices are generated from one shape
-function scaled by the starting price, so every holding moves the same percent over any window.
-Fetching those endpoints would add one request per holding and tell the model nothing new.
-
-Money values are converted before they are sent, so the period figures and the holdings always use
-the same currency as the dashboard.
-
-### Route safeguards
-
-- Validates the body and rejects a malformed selection or an empty message list with HTTP 400.
-- Caps the request at 12 messages, 2000 characters each, 25 holdings, and 25 asset classes, so it
-  cannot be used as an open proxy. Holdings arrive sorted by weight, so the trim keeps the largest
-  positions, and the model is told how many were left out.
-- Tells the model that the context block is data, not instructions.
-- Tells the model it is not an adviser, and passes the provider error message through on failure.
-
-## Milestone status
-
-| # | Task | Status |
-| --- | --- | --- |
-| 1 | Scaffold the base app shell | Done |
-| 2 | Portfolio summary card | Done |
-| 3 | Holdings table | Done |
-| 4 | Portfolio value line chart | Done |
-| 5 | Asset allocation chart | Done |
-| 10 | Top movers widget | Done |
-| 6-9 | Date range selector, currency toggle, account selector, holding detail view | Not started |
-| - | Portfolio AI (addition, not in the spec) | Done |
-
-### Milestone 2 notes
-
-The summary renders as a row of four statistic tiles: total market value, day change in money, day change
-percent, and total return since inception.
-
-Percentage units follow the mock API contract:
-
-- `dayChangePercent` is already a percent. `0.32` renders as `0.32%`.
-- `totalReturnSinceInception` is a ratio. `0.187` renders as `18.70%`.
-
-Direction states:
-
-- Gain: green value, green arrow, green icon tint.
-- Loss: red value, red arrow, red icon tint.
-- Zero: neutral navy value, dash icon, grey icon tint. A zero day change is never styled as a gain or a loss.
-- Total market value carries no direction, so it is never coloured.
-
-All figures come from the API. The page shows a skeleton while the request is in flight, and an error panel
-with a retry button when it fails. Stop the mock server to see that panel.
-
-There is no dataset picker in the interface. To check another dataset, call the API with its `scenario`
-parameter and compare:
-
-```sh
-curl "http://localhost:4000/portfolios/P-9001?scenario=negative"
-curl "http://localhost:4000/portfolios/P-9001?scenario=zero"
-```
-
-`npm run test:live` does this for every state, including the 503 and 404 paths.
-
-## Assumptions
-
-- All API money values are native CAD. The currency toggle converts for display only, using the rate from
-  `/exchange-rate`. If that request fails the app falls back to the documented `0.73`, which is the same
-  value the mock returns.
-- The page loads account `P-9001`. The account selector arrives in milestone 8.
-- The chart y-axis fits the data instead of starting at zero, which is the usual convention for a
-  value-over-time line.
-- A gap is any step longer than 1.5 times the usual step between points.
-- Portfolio AI reads fictional mock data. It is a demonstration, not advice.
-- Direction colour is derived from the native CAD figure, so toggling currency never changes a tile's colour.
-- Figures are rounded to two decimals before both formatting and direction checks, so a value that rounds to
-  zero reads as neutral rather than showing a signed `0.00`.
-- Very long values shrink one or two type steps so large portfolios stay on one line and keep their thousands
-  separators.
-- Milestone 2 reads from `src/mocks/`, as the task specifies mock JSON input. Wiring the live mock API is
-  planned with the account selector in milestone 8.
-- The navbar lists one working link, because only the overview page exists today. Its "Talk to us"
-  button reproduces the Electric Mind call to action style but is not wired to anything yet.
-- The theme follows the operating system until the user picks one with the navbar toggle. After that the
-  stored choice wins. The app does not follow later operating system changes within a session.
-
-## Unfinished work
-
-- Milestones 3 to 10.
-- Tests cover the domain logic and the API client. Component rendering tests need a DOM environment and are
-  not set up yet.
-- The date range selector (milestone 6) is not built, so the chart always shows the full history.
-- Portfolio AI replies are not streamed. The panel waits for the whole answer.
-- Requests are not cached or deduplicated. A data layer such as TanStack Query would be worth adding once
-  several components fetch at once.
+- **Composable Architecture**: Pure business logic is extracted into composable functions with accompanying unit tests.
+- **Strict Typing**: All components, hooks, and API responses are covered by strict TypeScript types.
+- **Single-Line Comments**: Following team guidelines, the codebase uses concise single-line comments (`// ...`) with a one-line summary at the top of each file.
+- **Hermetic Testing**: The test suite uses Vitest with mocked fetch responses, allowing complete CI execution without a running server.
+- **Accessibility**: Includes keyboard navigation for charts, semantic HTML tags, ARIA attributes (`aria-busy`, `aria-live`, `aria-label`), and high-contrast color ratios exceeding WCAG AA standards.

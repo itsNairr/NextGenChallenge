@@ -1,10 +1,11 @@
+// Summary: Card component hosting the portfolio value line chart and FolioMind selection actions.
 "use client";
 
 import { useState } from "react";
 import { formatFullDate } from "@/composables";
 import type { ChartSelection, ChartSeriesPoint, SelectionSummary } from "@/types";
 import { PortfolioValueChart } from "./PortfolioValueChart";
-import { Button, Card } from "./ui";
+import { Button, Card, ElectricMindSymbol } from "./ui";
 
 // Define properties for the chart card.
 interface PortfolioChartCardProps {
@@ -57,7 +58,7 @@ export function PortfolioChartCard({
           <p className="mt-1 text-sm text-body">
             {pendingIndex !== null
               ? "Now click the end of the period."
-              : "Click two points to select a period and ask Portfolio AI."}
+              : "Click two points to select a period and ask FolioMind."}
           </p>
         </div>
         {series.length > 0 ? (
@@ -99,7 +100,8 @@ export function PortfolioChartCard({
           </div>
           <div className="flex shrink-0 gap-2">
             <Button onClick={onAsk} disabled={!canAsk}>
-              Ask Portfolio AI
+              <ElectricMindSymbol className="h-3.5 w-auto" />
+              Ask FolioMind
             </Button>
             <Button variant="ghost" onClick={onClearSelection}>
               Clear

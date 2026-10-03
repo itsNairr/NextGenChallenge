@@ -61,10 +61,15 @@ export function PortfolioAiPanel({
   return (
     <Card>
       <div className="flex items-start gap-3">
-        <span className="eyebrow mt-0.5 rounded-[6px] bg-em-blue px-1.5 py-1 text-white">AI</span>
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-control border border-line bg-surface text-brand">
+          <ElectricMindSymbol className="h-5 w-auto" />
+        </div>
         <div className="min-w-0 flex-1">
-          <h2 className="text-lg font-semibold tracking-tight text-heading">Portfolio AI</h2>
-          <p className="mt-1 text-sm text-body">
+          <div className="flex items-center gap-2">
+            <h2 className="text-lg font-semibold tracking-tight text-heading">FolioMind</h2>
+            <span className="eyebrow rounded-[6px] bg-em-blue px-1.5 py-0.5 text-white">AI</span>
+          </div>
+          <p className="mt-0.5 text-sm text-body">
             Explains trends and dips you select on the chart.
           </p>
         </div>
@@ -123,11 +128,11 @@ export function PortfolioAiPanel({
       </div>
 
       <form onSubmit={handleSubmit} className="mt-4 flex gap-2 border-t border-line pt-4">
-        <label className="sr-only" htmlFor="portfolio-ai-input">
-          Ask Portfolio AI a question
+        <label className="sr-only" htmlFor="foliomind-input">
+          Ask FolioMind a question
         </label>
         <input
-          id="portfolio-ai-input"
+          id="foliomind-input"
           value={input}
           onChange={(event) => setInput(event.target.value)}
           disabled={!hasSelection}

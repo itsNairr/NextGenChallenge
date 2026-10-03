@@ -20,7 +20,6 @@ export function Navbar({ actions }: NavbarProps) {
             <ElectricMindSymbol className="h-6 w-auto shrink-0" />
             <ElectricMindWordmark className="h-4 w-auto shrink-0" />
           </div>
-          <span className="hidden h-4 w-px bg-line sm:inline-block" aria-hidden="true" />
         </Link>
 
         {/* Controls and call to action */}

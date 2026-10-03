@@ -1,3 +1,4 @@
+// Summary: Interactive SVG time-series line chart with pointer hover scrubbers and period range selection.
 "use client";
 
 import { useCallback, useId, useState } from "react";
