@@ -2,14 +2,19 @@
 
 import { useMemo } from "react";
 import {
+  AllocationCard,
   CurrencyToggle,
   ErrorState,
   Header,
+  HoldingsSkeleton,
+  HoldingsTable,
   Navbar,
   PortfolioAiPanel,
   PortfolioChartCard,
   PortfolioSummaryCard,
   SummarySkeleton,
+  TopMoversCard,
+  WidgetsSkeleton,
 } from "@/components";
 import {
   buildSelectionSummary,
@@ -23,10 +28,14 @@ import {
   usePortfolio,
   usePortfolioAi,
 } from "@/composables";
-import type { ChartSeriesPoint } from "@/types";
+import type { AllocationSlice, ChartSeriesPoint, Holding } from "@/types";
 
 // Load the first account until the account selector arrives in milestone 8.
 const DEFAULT_ACCOUNT_ID = "P-9001";
+
+// Reuse stable empty lists so memoised widgets do not rebuild on every render.
+const NO_ALLOCATION: readonly AllocationSlice[] = [];
+const NO_HOLDINGS: readonly Holding[] = [];
 
 // Render the portfolio overview page.
 export default function Home() {
@@ -43,7 +52,8 @@ export default function Home() {
   const { formatCurrency, formatSignedCurrency, formatSignedPercent } = useFormatters(currency);
 
   const summary = portfolio.data?.portfolio ?? null;
-  const holdings = useMemo(() => portfolio.data?.holdings ?? [], [portfolio.data]);
+  const allocation = portfolio.data?.allocation ?? NO_ALLOCATION;
+  const holdings = portfolio.data?.holdings ?? NO_HOLDINGS;
 
   // Convert the history into the active currency once, for every chart consumer.
   const series = useMemo<readonly ChartSeriesPoint[]>(
@@ -77,6 +87,8 @@ export default function Home() {
     selectionLabel,
   });
 
+  const isLoading = portfolio.status === "loading";
+
   return (
     <div className="min-h-screen">
       {/* Persistent top navigation */}
@@ -91,7 +103,7 @@ export default function Home() {
 
         <main className="flex flex-col gap-6">
           {/* Summary region, with its loading and error states */}
-          {portfolio.status === "loading" ? (
+          {isLoading ? (
             <SummarySkeleton />
           ) : portfolio.error ? (
             <ErrorState error={portfolio.error} onRetry={portfolio.refetch} />
@@ -133,6 +145,27 @@ export default function Home() {
             </div>
           ) : null}
 
+          {/* Allocation and top movers region. The summary error state covers failures. */}
+          {isLoading ? (
+            <WidgetsSkeleton />
+          ) : portfolio.error ? null : (
+            <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+              <AllocationCard
+                slices={allocation}
+                currency={currency}
+                convertAmount={convertAmount}
+              />
+              <TopMoversCard holdings={holdings} />
+            </div>
+          )}
+
+          {/* Holdings region. The summary error state covers failures. */}
+          {isLoading ? (
+            <HoldingsSkeleton />
+          ) : portfolio.error ? null : (
+            <HoldingsTable holdings={holdings} currency={currency} convertAmount={convertAmount} />
+          )}
+
           {/* Provenance line, so it is clear the figures come from the API */}
           {portfolio.data ? (
             <p className="eyebrow text-subtle">
@@ -147,8 +180,8 @@ export default function Home() {
           <section className="flex min-h-40 flex-col items-center justify-center rounded-card border border-dashed border-line p-10 text-center">
             <p className="eyebrow text-subtle">Next milestones</p>
             <p className="mt-3 max-w-md text-sm text-body">
-              Holdings table, allocation chart, date range selector, and widgets arrive in later
-              milestones.
+              The date range selector, the account selector, and the holding detail view arrive in
+              later milestones.
             </p>
           </section>
         </main>

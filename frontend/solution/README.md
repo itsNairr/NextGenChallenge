@@ -215,8 +215,11 @@ The route also:
 | --- | --- | --- |
 | 1 | Scaffold the base app shell | Done |
 | 2 | Portfolio summary card | Done |
+| 3 | Holdings table | Done |
 | 4 | Portfolio value line chart | Done |
-| 3, 5-10 | Holdings table, allocation chart, range selector, detail view, widgets | Not started |
+| 5 | Asset allocation chart | Done |
+| 10 | Top movers widget | Done |
+| 6-9 | Date range selector, currency toggle, account selector, holding detail view | Not started |
 | - | Portfolio AI (addition, not in the spec) | Done |
 
 ### Milestone 2 notes

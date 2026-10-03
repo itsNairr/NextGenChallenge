@@ -45,6 +45,10 @@ export interface Formatters {
   readonly formatSignedPercent: (percent: number) => string;
   // Format a ratio as a percent. 0.187 becomes "+18.70%".
   readonly formatSignedRatio: (ratio: number) => string;
+  // Format a share of a total without a sign. 12.5 becomes "12.50%".
+  readonly formatPercent: (percent: number) => string;
+  // Format a plain count. 12650 becomes "12,650" and 1.5 stays "1.5".
+  readonly formatQuantity: (quantity: number) => string;
 }
 
 // Build the number formatters for one currency.
@@ -72,11 +76,23 @@ export function createFormatters(currency: CurrencyCode): Formatters {
     maximumFractionDigits: DISPLAY_DIGITS,
   });
 
+  const plainNumber = new Intl.NumberFormat(PERCENT_LOCALE, {
+    minimumFractionDigits: DISPLAY_DIGITS,
+    maximumFractionDigits: DISPLAY_DIGITS,
+  });
+
+  // Show fractional units only when a holding has them.
+  const quantityNumber = new Intl.NumberFormat(PERCENT_LOCALE, {
+    maximumFractionDigits: 4,
+  });
+
   return {
     formatCurrency: (amount) => money.format(roundToDisplay(amount)),
     formatSignedCurrency: (amount) => signedMoney.format(roundToDisplay(amount)),
     formatSignedPercent: (percent) => `${signedNumber.format(roundToDisplay(percent))}%`,
     formatSignedRatio: (ratio) => `${signedNumber.format(roundToDisplay(ratio * 100))}%`,
+    formatPercent: (percent) => `${plainNumber.format(roundToDisplay(percent))}%`,
+    formatQuantity: (quantity) => quantityNumber.format(quantity),
   };
 }
 
