@@ -1,26 +1,102 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* Drive dark mode from the data-theme attribute so a toggle can control it. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* Electric Mind palette primitives. Source: electricmind.com theme variables. */
+@theme {
+  --color-em-blue: #3348ff;
+  --color-em-blue-dark: #253af3;
+  --color-em-blue-light: #6d7cfd;
+  --color-em-neuron: #c89ffd;
+  --color-em-lilac: #e5d2fc;
+  --color-eggshell: #f5f4f2;
+  --color-sand: #e9e8e4;
+  --color-granite: #d8d0c8;
+  --color-graphite: #3f3d3a;
+  --color-slate: #19131f;
+  --color-ink: #000000;
+
+  /* Semantic tokens. Each resolves to the active theme below. */
+  --color-page: var(--sc-page);
+  --color-surface: var(--sc-surface);
+  --color-line: var(--sc-line);
+  --color-heading: var(--sc-heading);
+  --color-body: var(--sc-body);
+  --color-subtle: var(--sc-subtle);
+  --color-brand: var(--sc-brand);
+  --color-accent-soft: var(--sc-accent-soft);
+  --color-gain: var(--sc-gain);
+  --color-gain-soft: var(--sc-gain-soft);
+  --color-loss: var(--sc-loss);
+  --color-loss-soft: var(--sc-loss-soft);
+  --color-flat: var(--sc-flat);
+  --color-flat-soft: var(--sc-flat-soft);
+
+  /* Rounded corners are kept, unlike the square Electric Mind site. */
+  --radius-card: 18px;
+  --radius-control: 10px;
+  --radius-chip: 12px;
+
+  --shadow-card: 0 1px 2px rgba(25, 19, 31, 0.04);
+
+  --text-eyebrow: 0.6875rem;
+  --tracking-eyebrow: 0.08em;
+  --tracking-tight: -0.01em;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* Light theme. This is the default and matches the Electric Mind site. */
+:root,
+:root[data-theme="light"] {
+  color-scheme: light;
+  --sc-page: #f5f4f2;
+  --sc-surface: #ffffff;
+  --sc-line: #d8d0c8;
+  --sc-heading: #000000;
+  --sc-body: #3f3d3a;
+  --sc-subtle: #666666;
+  --sc-brand: #3348ff;
+  --sc-accent-soft: #e5d2fc;
+  --sc-gain: #0b7a4b;
+  --sc-gain-soft: #e8f2ed;
+  --sc-loss: #b83224;
+  --sc-loss-soft: #f8ece9;
+  --sc-flat: #666666;
+  --sc-flat-soft: #ededea;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Dark theme, built from the inverted Electric Mind scheme. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --sc-page: #000000;
+  --sc-surface: #19131f;
+  --sc-line: #2e2833;
+  --sc-heading: #ffffff;
+  --sc-body: #c9c4bd;
+  --sc-subtle: #a39e98;
+  --sc-brand: #6d7cfd;
+  --sc-accent-soft: rgba(200, 159, 253, 0.16);
+  --sc-gain: #3fd39a;
+  --sc-gain-soft: rgba(63, 211, 154, 0.14);
+  --sc-loss: #ff8a75;
+  --sc-loss-soft: rgba(255, 138, 117, 0.14);
+  --sc-flat: #a39e98;
+  --sc-flat-soft: rgba(255, 255, 255, 0.08);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--sc-page);
+  color: var(--sc-heading);
+  font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: -0.01em;
+  overflow-x: hidden;
+}
+
+/* Uppercase mono eyebrow, used for labels across the dashboard. */
+@utility eyebrow {
+  font-family: var(--font-plex-mono), ui-monospace, monospace;
+  font-size: var(--text-eyebrow);
+  letter-spacing: var(--tracking-eyebrow);
+  text-transform: uppercase;
+  line-height: 1;
 }

@@ -1,33 +1,23 @@
-"use client";
+import type { ReactNode } from "react";
 
-// Define properties for Header component.
+// Define properties for the page heading.
 interface HeaderProps {
   readonly title: string;
+  readonly eyebrow?: string;
+  readonly actions?: ReactNode;
 }
 
-// Render persistent top navigation bar.
-export function Header({ title }: HeaderProps) {
+// Render the page heading with an uppercase mono eyebrow.
+export function Header({ title, eyebrow = "Portfolio", actions }: HeaderProps) {
   return (
-    // Top navigation container.
-    <header className="border-b border-zinc-200 bg-white/80 backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/80 sticky top-0 z-40">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        {/* Brand identity area */}
-        <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-600 text-white font-semibold shadow-sm">
-            WM
-          </div>
-          <div>
-            <h1 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">{title}</h1>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400">Wealth Management Platform</p>
-          </div>
-        </div>
-        {/* Environment badge */}
-        <div className="flex items-center gap-2">
-          <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
-            Live Ready
-          </span>
-        </div>
+    <div className="flex flex-col gap-5 pt-10 pb-8 lg:flex-row lg:items-end lg:justify-between">
+      <div>
+        <p className="eyebrow text-subtle">{eyebrow}</p>
+        <h1 className="mt-3 text-[2.5rem] leading-[1.1] font-bold tracking-tight text-heading">
+          {title}
+        </h1>
       </div>
-    </header>
+      {actions ? <div className="shrink-0">{actions}</div> : null}
+    </div>
   );
 }
