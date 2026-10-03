@@ -74,6 +74,16 @@ export function ArrowDownIcon({ className }: IconProps) {
   );
 }
 
+// Render a pair of arrows for a sortable column that is not sorted.
+export function SortIcon({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} aria-hidden="true" {...STROKE_PROPS}>
+      <path d="m7 9 5-5 5 5" />
+      <path d="m7 15 5 5 5-5" />
+    </svg>
+  );
+}
+
 // Render a dash for no change.
 export function DashIcon({ className }: IconProps) {
   return (

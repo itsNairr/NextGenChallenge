@@ -33,6 +33,14 @@
   --color-flat: var(--sc-flat);
   --color-flat-soft: var(--sc-flat-soft);
 
+  /* Categorical chart palette. Order matches the allocation segments. */
+  --color-chart-1: var(--sc-chart-1);
+  --color-chart-2: var(--sc-chart-2);
+  --color-chart-3: var(--sc-chart-3);
+  --color-chart-4: var(--sc-chart-4);
+  --color-chart-5: var(--sc-chart-5);
+  --color-chart-6: var(--sc-chart-6);
+
   /* Rounded corners are kept, unlike the square Electric Mind site. */
   --radius-card: 18px;
   --radius-control: 10px;
@@ -63,6 +71,12 @@
   --sc-loss-soft: #f8ece9;
   --sc-flat: #666666;
   --sc-flat-soft: #ededea;
+  --sc-chart-1: #3348ff;
+  --sc-chart-2: #c89ffd;
+  --sc-chart-3: #3f3d3a;
+  --sc-chart-4: #a39e98;
+  --sc-chart-5: #6d7cfd;
+  --sc-chart-6: #e5d2fc;
 }
 
 /* Dark theme, built from the inverted Electric Mind scheme. */
@@ -82,6 +96,12 @@
   --sc-loss-soft: rgba(255, 138, 117, 0.14);
   --sc-flat: #a39e98;
   --sc-flat-soft: rgba(255, 255, 255, 0.08);
+  --sc-chart-1: #6d7cfd;
+  --sc-chart-2: #c89ffd;
+  --sc-chart-3: #f5f4f2;
+  --sc-chart-4: #a39e98;
+  --sc-chart-5: #3348ff;
+  --sc-chart-6: #e5d2fc;
 }
 
 body {

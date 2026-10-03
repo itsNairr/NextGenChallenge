@@ -121,7 +121,10 @@ Each composable exports a pure function next to its hook, so the domain logic is
 | --- | --- | --- |
 | 1 | Scaffold the base app shell | Done |
 | 2 | Portfolio summary card | Done |
-| 3-10 | Holdings, charts, selectors, detail view, widgets | Not started |
+| 3 | Holdings table | Done |
+| 4, 6-9 | Performance chart, selectors, detail view | Not started |
+| 5 | Asset allocation chart | Done |
+| 10 | Top movers widget | Done |
 
 ### Milestone 2 notes
 
